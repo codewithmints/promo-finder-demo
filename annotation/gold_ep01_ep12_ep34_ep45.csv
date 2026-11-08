@@ -1,0 +1,15 @@
+ep,promo_id,label,rank,start_ref,end_ref,start,end,duration_s,hook_ref,hook_time,cliff_ref,cliff_time,quality,cold_ok,spoiler,neg_reason,note
+1,g01_01,pos,1,e01_s003,e01_u026,00:09.80,00:41.20,31.4,e01_u007,00:11.30,e01_u026,00:41.20,1,Y,N,,Altar betrayal reveal
+1,g01_02,pos,2,e01_s013,e01_u036,00:33.70,00:56.90,23.2,e01_u022,00:33.80,e01_u036,00:56.90,1,Y,N,,Juliana confronts her betrayers
+1,g01_03,pos,3,e01_u037,e01_u056,00:57.00,01:23.60,26.6,e01_u037,00:57.00,e01_u056,01:23.60,2,Y,N,,Family betrayal deepens
+1,g01_04,neg,,e01_u072,e01_u088,01:45.40,02:11.20,25.8,e01_u072,01:45.40,e01_u088,02:11.20,3,Y,Y,resolved,Too much payoff
+12,g12_01,pos,1,e12_s015,e12_u054,00:43.70,01:27.21,43.51,e12_u031,00:44.00,e12_u054,01:27.21,1,Y,N,,Impossible choice for her husband
+12,g12_02,neg,,e12_s000,e12_u031,00:00.00,00:46.40,46.4,e12_u001,00:00.50,e12_u031,00:46.40,2,Y,N,weak_hook,Too much setup before ultimatum
+34,g34_01,pos,1,e34_s000,e34_u027,00:00.00,00:48.80,48.8,e34_u001,00:01.20,e34_u027,00:48.80,1,Y,N,,Witchcraft accusation and defiance
+34,g34_02,pos,2,e34_u055,e34_u078,01:31.00,02:06.40,35.4,e34_u055,01:31.00,e34_u078,02:06.40,1,Y,N,,Witnesses turn trial against her
+34,g34_03,pos,3,e34_u078,e34_u113,02:03.60,03:04.20,60.6,e34_u078,02:03.60,e34_u113,03:04.20,2,Y,N,,Defiance before possible sentence
+34,g34_04,neg,,e34_u029,e34_u046,00:49.10,01:24.90,35.8,e34_u029,00:49.10,e34_u046,01:24.90,3,Y,N,bad_boundary,Strong testimony but resolves
+45,g45_01,pos,1,e45_u057,e45_u071,01:26.50,01:57.20,30.7,e45_u058,01:27.50,e45_u071,01:57.20,1,Y,N,,Marriage suddenly declared invalid
+45,g45_02,pos,2,e45_s014,e45_u054,00:42.00,01:23.00,41,e45_u032,00:42.20,e45_u054,01:23.00,1,Y,N,,Alexander publicly claims Juliana
+45,g45_03,pos,3,e45_u005,e45_u034,00:05.20,00:48.80,43.6,e45_u005,00:05.20,e45_u034,00:48.80,2,Y,N,,Identity reveal and emotional reunion
+45,g45_04,neg,,e45_s011,e45_u034,00:29.80,00:48.80,19,e45_u024,00:30.20,e45_u034,00:48.80,3,Y,Y,resolved,Romantic payoff resolves

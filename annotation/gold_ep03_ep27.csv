@@ -1,0 +1,11 @@
+ep,promo_id,label,rank,start_ref,end_ref,start,end,duration_s,hook_ref,hook_time,cliff_ref,cliff_time,quality,cold_ok,spoiler,neg_reason,note
+3,g03_01,pos,1,e03_s053,e03_u117,01:59.2,02:25.8,26.55,e03_u100,01:59.8,e03_s062,02:25.8,1,Y,N,,best proposal cliffhanger
+3,g03_02,pos,2,e03_u026,e03_s026,00:36.5,01:04.5,28,e03_u028,00:38.5,e03_u051,01:03.5,2,Y,N,,Strong rejection and danger cliffhanger
+3,g03_03,pos,3,e03_u056,e03_u095,01:06.0,01:54.1,48.1,e03_u058,01:09.9,e03_u095,01:54.1,2,Y,N,,Hero rescue with emotional hook
+3,g03_04,neg,,e03_s000,e03_s022,00:00.0,00:58.2,58.2,e03_u001,00:02.1,e03_u044,00:58.2,3,Y,N,weak_hook,Slow setup before major action
+3,g03_05,neg,,e03_u080,e03_s052,01:34.1,01:59.2,25.1,e03_u080,01:34.1,e03_u095,01:54.1,3,N,N,needs_context,Emotional but lacks enough setup
+27,g27_01,pos,1,e27_s000,e27_s014,00:00.0,00:48.8,48.8,e27_u001,00:01.3,e27_u024,00:46.4,1,Y,N,,Identity mystery with perfect cliffhanger
+27,g27_02,pos,2,e27_u067,e27_s049,01:50.3,02:30.5,40.2,e27_u067,01:50.3,e27_s049,02:30.5,1,Y,N,,False accusation ending in arrest
+27,g27_03,pos,3,e27_u038,e27_u067,01:04.8,01:51.8,47,e27_u038,01:04.8,e27_u067,01:51.8,2,Y,N,,Builds accusation and ends on poison question
+27,g27_04,neg,,e27_u005,e27_u022,00:06.4,00:44.2,37.8,e27_u005,00:06.4,e27_u022,00:44.2,3,Y,N,bad_boundary,Strong reveal but resolves before tension peaks
+27,g27_05,neg,,e27_s026,e27_u065,01:20.8,01:49.8,29,e27_u049,01:21.0,e27_u065,01:49.8,3,N,N,needs_context,Accusation lacks setup and payoff

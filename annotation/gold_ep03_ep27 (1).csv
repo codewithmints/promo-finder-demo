@@ -1,0 +1,6 @@
+ep,promo_id,label,rank,start_ref,end_ref,start,end,duration_s,hook_ref,hook_time,cliff_ref,cliff_time,quality,cold_ok,spoiler,neg_reason,note
+27,g27_01,pos,1,e27_s000,e27_s014,00:00.00,00:48.80,48.8,e27_u001,00:01.30,e27_u024,00:46.40,1,Y,N,,Identity mystery with perfect cliffhanger
+27,g27_02,pos,2,e27_u067,e27_s049,01:50.30,02:30.50,40.2,e27_u067,01:50.30,e27_s049,02:30.50,1,Y,N,,False accusation ending in arrest
+27,g27_03,pos,3,e27_u038,e27_u067,01:04.80,01:51.80,47,e27_u038,01:04.80,e27_u067,01:51.80,2,Y,N,,Builds accusation and ends on poison question
+27,g27_04,neg,,e27_u005,e27_u022,00:06.40,00:44.20,37.8,e27_u005,00:06.40,e27_u022,00:44.20,3,Y,N,bad_boundary,Strong reveal but resolves before tension peaks
+27,g27_05,neg,,e27_s026,e27_u065,01:20.80,01:49.80,29,e27_u049,01:21.00,e27_u065,01:49.80,3,N,N,needs_context,Accusation lacks setup and payoff
