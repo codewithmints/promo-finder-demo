@@ -506,7 +506,7 @@ elif page == LIVE_PAGE:
             c[2].metric("Tier A · post first", sum(p["tier"] == "A" for p in LP))
             c[3].metric("Multi-segment", sum(len(p["segments"]) > 1 for p in LP))
             c[4].metric("Weights", LM.get("weights_version", "global/v0"))
-            issues = ing["flags"] + [f"{n}: {w}" for n, w in upl["rejected"]] + \
+            issues = upl.get("notes", []) + ing["flags"] + [f"{n}: {w}" for n, w in upl["rejected"]] + \
                      ([f"Pass A failed for episodes {R['failed_eps']}; they are not ranked"] if R["failed_eps"] else [])
             if issues:
                 with st.expander(f"⚠️ {len(issues)} warning(s) about the input", expanded=True):

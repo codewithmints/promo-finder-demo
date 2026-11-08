@@ -355,6 +355,15 @@ def start_job(files: list[tuple[str, bytes]], *, mode: str = "new", show_name: s
     if mode == "continuation" and not existing_show:
         raise UploadError("choose which existing show these episodes continue")
     col = collect_inputs(files)
+    notes = []
+    if mode != "continuation" and not (show_name or "").strip():      # never block on a missing show name
+        from .show import RE_HDR_SHOW, GENERIC_FOLDERS
+        has_header = any(RE_HDR_SHOW.search(t[:3000]) for t in col["texts"].values())
+        folder_ok = col["folder_hint"] and col["folder_hint"].lower() not in GENERIC_FOLDERS
+        if not has_header and not folder_ok:
+            zips = [Path(n).stem for n, _ in files if n.lower().endswith(".zip")]
+            show_name = zips[0] if len(zips) == 1 and zips[0].lower() not in GENERIC_FOLDERS else "Uploaded Show"
+            notes.append(f"No show name found in the files; using '{show_name}'. Type a name in 'Show name' to change it.")
     cleanup_old()
     job_id = uuid.uuid4().hex[:12]
     ws = _workspace(job_id, existing_show if mode == "continuation" else None)
@@ -366,7 +375,7 @@ def start_job(files: list[tuple[str, bytes]], *, mode: str = "new", show_name: s
     job = LiveJob(job_id, ws, len(col["texts"]), mode, (show_name or "").strip() or None,
                   existing_show if mode == "continuation" else None, cold_viewer_top, provider,
                   upload_report={"files": sorted(col["texts"]), "skipped": col["skipped"], "rejected": col["rejected"],
-                                 "folder": folder})
+                                 "folder": folder, "notes": notes})
     with _LOCK:
         _JOBS[job_id] = job
     if background:
