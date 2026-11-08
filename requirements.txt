@@ -1,6 +1,7 @@
-streamlit>=1.35
+streamlit>=1.37
 altair>=5
 pandas
 pydantic>=2
 numpy
 python-dotenv
+google-genai

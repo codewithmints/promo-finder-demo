@@ -26,7 +26,7 @@ from .parser import parse_episode, Episode
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "data" / "shows.json"
-GENERIC_FOLDERS = {"raw", "data", "episodes", "episode", "scripts", "script", "input", "inputs", "txt", "new", "files",
+GENERIC_FOLDERS = {"raw", "data", "upload", "episodes", "episode", "scripts", "script", "input", "inputs", "txt", "new", "files",
                    "screenplays", "screenplay", "uploads", "download", "downloads", "tmp", "temp"}
 RE_HDR_NUM = re.compile(r"^\s*EPISODE\s+NUMBER\s*:\s*(?:Episode\s*)?(\d+)", re.I | re.M)
 RE_HDR_SHOW = re.compile(r"^\s*(?:SHOW|SERIES|SHOW\s+TITLE|SERIES\s+TITLE)\s*:\s*(.+)$", re.I | re.M)

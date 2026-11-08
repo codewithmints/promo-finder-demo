@@ -1,0 +1,22 @@
+{
+ "version": "v0",
+ "scope": "global",
+ "status": "baseline",
+ "weights": {
+  "hook": 0.3,
+  "cliff": 0.3,
+  "intensity": 0.1,
+  "escalation": 0.05,
+  "dur": 0.05,
+  "dialogue": 0.05,
+  "context": -0.15,
+  "spoiler": -0.1,
+  "resolution": -0.25,
+  "slow_open": -0.1,
+  "cv_reject": -0.3,
+  "cv_context": -0.1,
+  "join": -0.05
+ },
+ "created": "2026-11-08 06:26:40",
+ "source": "hand-set from the assignment criteria; kept after the pre-registered comparison (results/ranking_decision.json)"
+}

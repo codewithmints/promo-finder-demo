@@ -20,6 +20,7 @@ DATA = ROOT / "app_data"
 PUBLIC = os.getenv("PUBLIC_MODE", "0") == "1" or (ROOT / ".public_mode").exists()   # the public bundle ships the marker
 BLUE, ORANGE, MUTED = "#2a78d6", "#eb6834", "#8a8984"
 TIER_TEXT = {"A": "Post first", "B": "Good, with caveats", "C": "Post last / needs review"}
+LIVE_PAGE = "Analyze New Input"
 REASONS = ["weak_hook", "no_cliffhanger", "resolved", "confusing", "needs_context", "spoiler", "bad_boundary",
            "low_emotion", "boring", "duplicate", "other"]
 
@@ -132,8 +133,8 @@ with st.sidebar:
     ids = list(shows)
     SID = st.selectbox("Show", ids, index=ids.index(idx["default_show"]) if idx["default_show"] in ids else 0,
                        format_func=lambda s: shows[s]["show_name"])
-    page = st.radio("Page", ["Dashboard", "Promo Explorer", "Human Review", "Evaluation", "Failure Analysis", "Feedback Learning"],
-                    label_visibility="collapsed")
+    page = st.radio("Page", ["Dashboard", "Promo Explorer", "Human Review", "Evaluation", "Failure Analysis", "Feedback Learning",
+                             LIVE_PAGE], label_visibility="collapsed", key="page")
     st.divider()
     st.caption(("🔒 Public mode: screenplay excerpts hidden; reviews are saved to a demo file that never changes the ranking."
                 if PUBLIC else "🖥️ Local mode: full excerpts; reviews feed the real feedback store."))
@@ -410,3 +411,159 @@ elif page == "Feedback Learning":
                      "bootstrap_win_rate": res["bootstrap_win_rate"], "weight_change": res["weight_change"]})
     else:
         st.caption("In the public demo, reviews are stored separately and never reach the learner.")
+
+elif page == LIVE_PAGE:
+    from promo import live
+
+    st.title("Analyze New Input")
+    st.caption("UPLOAD → ANALYZE → REVIEW RESULTS · the real pipeline (parser → Pass A → candidates → Cold Viewer → global "
+               "ranking → tiers) runs on your files in an isolated temporary workspace. The pre-computed demo is not touched, "
+               "and uploaded screenplays are never stored in the app's data or repository.")
+    job = live.get_job(st.session_state.get("live_job", "")) if st.session_state.get("live_job") else None
+
+    def back_to_demo():
+        st.session_state["page"] = "Dashboard"
+
+    def new_input():
+        j = live.get_job(st.session_state.pop("live_job", ""))
+        if j and j.state in ("done", "error"):
+            j.cleanup()
+
+    # ---------------- UPLOAD
+    if job is None:
+        provider = os.getenv("LLM_PROVIDER", "gemini")
+        problem = live.preflight(provider)
+        if problem:
+            st.error(problem)
+            use_offline = st.checkbox("Run with the offline heuristic instead (no API calls; clearly lower quality)", value=False)
+            if use_offline:
+                provider, problem = "offline", None
+        ups = st.file_uploader("Upload one or more `.txt` screenplay files, or a `.zip` containing screenplay files.",
+                               type=["txt", "zip"], accept_multiple_files=True)
+        c1, c2 = st.columns(2)
+        mode = c1.radio("These episodes are", ["A new show", "Later episodes of an existing show"], horizontal=False)
+        existing = None
+        if mode.startswith("Later"):
+            opts = list(shows)
+            sel = c2.selectbox("Existing show", opts, format_func=lambda x: shows[x]["show_name"])
+            existing = {"show_id": sel, "show_name": shows[sel]["show_name"]}
+            name = None
+        else:
+            name = c2.text_input("Show name (optional)", help="Needed only if the files have no SHOW:/SERIES: header and "
+                                 "the ZIP folder name does not identify the show. Ambiguity is reported, never guessed.")
+        cv = st.selectbox("Cold Viewer check (an LLM judging each clip as a first-time viewer; used only as a penalty)",
+                          ["Top 2 candidates per episode (recommended)", "All candidates (slowest)", "Off (fastest)"])
+        cv_top = {"Top": 2, "All": None, "Off": 0}[cv.split()[0]]
+        st.caption("Episodes are processed one at a time with automatic retries on rate limits. Rough time with the free "
+                   "Gemini tier: about 10 s per episode for Pass A, plus about 6 s per Cold Viewer call.")
+        if st.button("Analyze", type="primary", disabled=not ups or bool(problem)):
+            try:
+                files = [(u.name, u.getvalue()) for u in ups]
+                j = live.start_job(files, mode="continuation" if existing else "new", show_name=name, existing_show=existing,
+                                   cold_viewer_top=cv_top, provider=provider)
+                st.session_state["live_job"] = j.job_id
+                st.rerun()
+            except live.UploadError as e:
+                st.error(f"Not started: {e}")
+        st.button("← Back to demo", on_click=back_to_demo)
+
+    # ---------------- ANALYZE (progress)
+    elif job.state in ("queued", "running"):
+        @st.fragment(run_every=2)
+        def progress():
+            j = live.get_job(st.session_state.get("live_job", ""))
+            if j is None:
+                return
+            stt = j.status()
+            if stt["state"] not in ("queued", "running"):
+                st.rerun()
+            frac = stt["done_eps"] / stt["total_eps"] if stt["total_eps"] else 0.02
+            st.progress(min(1.0, frac), text=f"{stt['step'] or 'Starting'} · {stt['elapsed_s']}s elapsed")
+            if j.upload_report:
+                st.caption(f"{len(j.upload_report['files'])} screenplay file(s) received"
+                           + (f" · {len(j.upload_report['skipped'])} unrelated file(s) ignored" if j.upload_report["skipped"] else "")
+                           + (f" · {len(j.upload_report['rejected'])} rejected" if j.upload_report["rejected"] else ""))
+            with st.expander("Log", expanded=False):
+                st.code("\n".join(stt["log"]) or "…", language=None)
+        progress()
+        st.caption("You can switch to other pages; the analysis keeps running on the server for this session.")
+
+    # ---------------- RESULTS / ERROR
+    else:
+        stt = job.status()
+        if job.state == "error":
+            st.error(f"Analysis failed: {stt['error']}")
+            with st.expander("Log"):
+                st.code("\n".join(stt["log"]), language=None)
+        else:
+            R = job.results()
+            LP, LM, ing, upl = R["promos"], R["manifest"], R["ingest"], R["upload"]
+            st.success(f"{ing['show_name']}: {len(ing['episodes'])} episode(s) analysed in {stt['elapsed_s']}s → "
+                       f"{len(LP)} promos in one global ranking.")
+            c = st.columns(5)
+            c[0].metric("Episodes", len(ing["episodes"]))
+            c[1].metric("Ranked promos", len(LP))
+            c[2].metric("Tier A · post first", sum(p["tier"] == "A" for p in LP))
+            c[3].metric("Multi-segment", sum(len(p["segments"]) > 1 for p in LP))
+            c[4].metric("Weights", LM.get("weights_version", "global/v0"))
+            issues = ing["flags"] + [f"{n}: {w}" for n, w in upl["rejected"]] + \
+                     ([f"Pass A failed for episodes {R['failed_eps']}; they are not ranked"] if R["failed_eps"] else [])
+            if issues:
+                with st.expander(f"⚠️ {len(issues)} warning(s) about the input", expanded=True):
+                    for i in issues:
+                        st.markdown(f"- {i}")
+            if upl["skipped"]:
+                with st.expander(f"{len(upl['skipped'])} unrelated file(s) ignored"):
+                    st.markdown("\n".join(f"- {n} ({w})" for n, w in upl["skipped"][:200]))
+            tabs = st.tabs(["Top promos", "Global ranking", "By episode", "Checks"] + (["Alongside existing show"] if job.existing_show else []))
+            with tabs[0]:
+                if not LP:
+                    st.info("No promo could be cut (episodes may be shorter than 20 s or lack timed lines).")
+                for p in LP[:10]:
+                    promo_card(p)
+            with tabs[1]:
+                st.dataframe(pd.DataFrame([{"rank": p["rank"], "tier": p["tier"], "episode": p["episode"], "segments": seg_str(p),
+                                            "dur (s)": p["duration_s"], "score": round(p["final_score"], 3), "hook": spk(p["hook"]),
+                                            "cliffhanger": spk(p["cliffhanger"]), "flags": ", ".join(p["flags"])} for p in LP]),
+                             hide_index=True, use_container_width=True, height=360)
+                if LP:
+                    pick = st.selectbox("Inspect", [p["promo_id"] for p in LP],
+                                        format_func=lambda i: next(f"#{p['rank']} · Ep {p['episode']} · {p['hook']['text'][:70]}" for p in LP if p["promo_id"] == i))
+                    p = next(x for x in LP if x["promo_id"] == pick)
+                    promo_card(p)
+                    st.markdown(f"**Tier {p['tier']}** — {p['tier_reason']} · **Score:** {p['score_breakdown_text']}")
+                    st.code("\n".join(f"[{x['start']}] {x['label']}: {x['text']}" for x in p.get("screenplay_excerpt", [])), language=None)
+            with tabs[2]:
+                eps_l = sorted({p["episode"] for p in LP})
+                if eps_l:
+                    e = st.selectbox("Episode", eps_l)
+                    mine = [p for p in LP if p["episode"] == e]
+                    st.caption(f"{len(mine)} promo(s) from episode {e}; numbers are their GLOBAL rank in this batch")
+                    for p in mine:
+                        promo_card(p)
+                        with st.expander("Screenplay excerpt"):
+                            st.code("\n".join(f"[{x['start']}] {x['label']}: {x['text']}" for x in p.get("screenplay_excerpt", [])), language=None)
+                missing = sorted(set(ing["episodes"]) - set(eps_l))
+                if missing:
+                    st.caption(f"No promo from episode(s) {missing}: none passed the 20–60 s / legal-cut rules or scored high enough.")
+            with tabs[3]:
+                m1 = re.search(r"## 1\. Hard constraints.*?(?=\n## |\Z)", R["report"], re.S)
+                m7 = re.search(r"## 7\. Where the tool picks badly.*?(?=\n## |\Z)", R["report"], re.S)
+                for m in (m1, m7):
+                    if m:
+                        st.markdown(m.group(0).replace("## ", "#### ", 1))
+            if job.existing_show:
+                with tabs[4]:
+                    old = D["promos"] if SID == job.existing_show["show_id"] else load_show(job.existing_show["show_id"])["promos"]
+                    merged = sorted([dict(p, source="new upload") for p in LP] + [dict(p, source="pre-computed") for p in old],
+                                    key=lambda p: -p["final_score"])
+                    st.caption("Same scoring and weights, so scores are comparable: where the new episodes' promos would land "
+                               "among the existing show's ranked promos.")
+                    st.dataframe(pd.DataFrame([{"combined rank": i, "source": p["source"], "episode": p["episode"],
+                                                "segments": seg_str(p), "score": round(p["final_score"], 3), "tier": p["tier"],
+                                                "hook": p["hook"]["text"][:90]} for i, p in enumerate(merged[:150], 1)]),
+                                 hide_index=True, use_container_width=True, height=420)
+        b1, b2 = st.columns(2)
+        b1.button("Analyze another input", on_click=new_input, type="primary")
+        b2.button("← Back to demo", on_click=back_to_demo)
+

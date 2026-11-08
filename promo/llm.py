@@ -65,7 +65,7 @@ class LLMJSON:
         self.min_interval = float(os.getenv("LLM_MIN_INTERVAL", "4") if min_interval is None else min_interval)
         if self.provider == "offline" and min_interval is None:
             self.min_interval = 0.0
-        self.max_retries = max_retries
+        self.max_retries = int(os.getenv("LLM_MAX_RETRIES", max_retries))
         self._last = 0.0
         self._client = client  # injectable for tests (Gemini-shaped: client.models.generate_content)
         self.stats = {"calls": 0, "cache_hits": 0, "retries": 0, "in_tokens": 0, "out_tokens": 0,
